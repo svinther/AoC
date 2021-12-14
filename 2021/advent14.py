@@ -52,7 +52,7 @@ def run_for_pair(db, pair, cur, max, cache):
     cache[cache_key] = counts_
     return counts_
 
-
+# Used for part 1
 def step(db, seq):
     result = []
     for pos in range(len(seq) - 1):
