@@ -71,7 +71,8 @@ for num, data in enumerate(inputs, start=1):
                 else:
                     MAP[y][x] = MAP[y - H][x]
                 MAP[y][x] += 1
-                if MAP[y][x] == H:
+                # Wrap from 9 -> 1
+                if MAP[y][x] == 10:
                     MAP[y][x] = 1
 
     # do it for both maps and print all result
