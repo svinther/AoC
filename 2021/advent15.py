@@ -38,11 +38,11 @@ def visualize(m, points):
 # Only consider unused nodes
 def adjecants(m, p, used):
     risk, (x, y) = p
-    result = set()
+    result = {}
     for xn, yn in (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1):
         if xn >= 0 and yn >= 0 and xn <= end[0] and yn <= end[1]:
             if (xn, yn) not in used:
-                result.add((risk + m[yn][xn], (xn, yn)))
+                result[(xn, yn)]= (risk + m[yn][xn], (xn, yn))
     return result
 
 
@@ -77,6 +77,7 @@ for num, data in enumerate(inputs, start=1):
 
     # do it for both maps and print all result
     for M in (MAP_, MAP):
+        # Set of nodes where we now the total risk from start to node
         U = set()
 
         start = (0, 0)
@@ -88,9 +89,16 @@ for num, data in enumerate(inputs, start=1):
         start_time = time.time()
         while cur[1] != end:
             U.add(cur[1])
-            Q.extend(adjecants(M, cur, U | {z[1] for z in Q}))
-            Q.sort(key=itemgetter(0), reverse=True)
-            cur = Q.pop()
+
+            adjs = adjecants(M, cur, U)
+            # Test if we already have path to
+            if end in adjs:
+                cur = adjs[end]
+            else:
+                U.update(adjs.keys())
+                Q.extend(adjs.values())
+                Q.sort(key=itemgetter(0), reverse=True)
+                cur = Q.pop()
 
         end_time = time.time()
         # visualize(M, U)
