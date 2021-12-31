@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import chain, permutations
+from itertools import chain, permutations, combinations
 
 year = 2021
 day = 19
@@ -131,3 +131,11 @@ for sid, perm in perms.items():
         all_beacons.add(trans_b)
 
 print(len(all_beacons))
+
+maxmanhattan = (0, None, None)
+for p0, p1 in combinations(distances.values(), 2):
+    manhattan = sum(tuple(abs(a-b) for a,b in zip(p0,p1)))
+    if manhattan > maxmanhattan[0]:
+        maxmanhattan = manhattan, p0, p1
+
+print(maxmanhattan)
