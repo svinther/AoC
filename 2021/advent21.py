@@ -1,33 +1,25 @@
 import sys
-from collections import defaultdict
+from functools import cache
+from itertools import product
+
+# inspired/stolen from https://www.youtube.com/watch?v=a6ZdJEntKkk&ab_channel=JonathanPaulson
+@cache
+def paths21(p1, p2, s1, s2):
+    if s1 >= 21:
+        return (1, 0)
+    if s2 >= 21:
+        return (0, 1)
+    ans = (0, 0)
+    for rolls in product(range(1, 3 + 1), repeat=3):
+        p1_ = (p1 + sum(rolls)) % 10
+        s1_ = s1 + p1_ + 1
+        ans_ = paths21(p2, p1_, s2, s1_)
+        ans = (ans[0] + ans_[1], ans[1] + ans_[0])
+    return ans
 
 
-def paths21(pos, base, score, result):
-    for roll in range(3, 9 + 1):
-        base_ = base + (roll,)
-        pos_ = (pos + roll - 1) % 10 + 1
-        score_ = score + pos_
-        if score_ >= 21:
-            result[len(base_)].add(base_)
-        else:
-            paths21(pos_, base_, score_, result)
-
-
-p1paths = defaultdict(set)
-paths21(4, tuple(), 0, p1paths)
-p2paths = defaultdict(set)
-paths21(8, tuple(), 0, p2paths)
-
-p1_universes = 0
-p2_universes = 0
-for rollcount in p1paths.keys() | p2paths.keys():
-    p1wins = len(p1paths[rollcount])
-    p2wins = len(p2paths[rollcount] - p1paths[rollcount])  # p1 wins first
-    print(rollcount, p1wins, p2wins)
-    p1_universes += p1wins * (7 ** rollcount - p2wins) * (3 ** rollcount)
-    p2_universes += p2wins * (7 ** rollcount - p1wins) * (3 ** rollcount)
-
-print(p1_universes, p2_universes)
+print(paths21(4 - 1, 8 - 1, 0, 0))
+print(paths21(1 - 1, 5 - 1, 0, 0))
 
 sys.exit(0)
 # part 1
