@@ -31,7 +31,7 @@ inputs = [
 [[9,3],[[9,9],[6,[4,9]]]]
 [[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]
 [[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]
-"""
+""",
 ]
 
 with open(f"input.{year}.{day}.txt", "r") as iopen:
@@ -60,14 +60,20 @@ def explode(snum):
                 m_num_right = re.search("\d+", right)
                 if m_num_right:
                     newnum = str(int(m_num_right.group(0)) + r)
-                    right = right[:m_num_right.start()] + newnum + right[m_num_right.end():]
+                    right = (
+                        right[: m_num_right.start()]
+                        + newnum
+                        + right[m_num_right.end() :]
+                    )
 
                 # explode left
                 m_num_left_iter = list(re.finditer("\d+", left))  # <-- reversed left
                 if m_num_left_iter:
                     m_num_left = m_num_left_iter[-1]
                     newnum = str(int(m_num_left.group(0)) + l)
-                    left = left[:m_num_left.start()] + newnum + left[m_num_left.end():]
+                    left = (
+                        left[: m_num_left.start()] + newnum + left[m_num_left.end() :]
+                    )
 
                 return explosion, left + "0" + right
             else:
@@ -82,7 +88,7 @@ def splitit(snum):
     if m:
         splitnum = int(m.group(0))
         pair = (math.floor(splitnum / 2), math.ceil(splitnum / 2))
-        return snum[0:m.start()] + f"[{pair[0]},{pair[1]}]" + snum[m.end():]
+        return snum[0 : m.start()] + f"[{pair[0]},{pair[1]}]" + snum[m.end() :]
 
 
 def magnitude(snum):
@@ -92,7 +98,7 @@ def magnitude(snum):
         m = re.search(p, result)
         if m:
             l, r = int(m.group(1)), int(m.group(2))
-            result = result[0:m.start()] + str((l * 3 + r * 2)) + result[m.end():]
+            result = result[0 : m.start()] + str((l * 3 + r * 2)) + result[m.end() :]
         else:
             break
 
@@ -121,16 +127,16 @@ def snailsum(n1, n2):
             break
     return result
 
+
 def get_highest_combo_magnitude(snums):
     highscore = -1
     for i in range(len(snums)):
         for j in range(len(snums)):
             if i != j:
-                summed=snailsum(snums[i], snums[j])
+                summed = snailsum(snums[i], snums[j])
                 magn = magnitude(summed)
                 highscore = max(highscore, magn)
     return highscore
-
 
 
 for num, data in enumerate(inputs, start=1):

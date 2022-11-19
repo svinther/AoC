@@ -22,7 +22,11 @@ def test_overlap_axis():
 
 
 def overlap(c1: Cuboid, c2: Cuboid):
-    return overlap_axis(c1[0], c2[0]) and overlap_axis(c1[1], c2[1]) and overlap_axis(c1[2], c2[2])
+    return (
+        overlap_axis(c1[0], c2[0])
+        and overlap_axis(c1[1], c2[1])
+        and overlap_axis(c1[2], c2[2])
+    )
 
 
 def test_overlap():
@@ -36,14 +40,14 @@ def split_new_cuboid(existing: Cuboid, new: Cuboid):
         ltx = (
             (new[0][0], existing[0][0] - 1),
             (new[1][0], new[1][1]),
-            (new[2][0], new[2][1])
+            (new[2][0], new[2][1]),
         )
         splitted.append(ltx)
     if new[0][1] > existing[0][1]:
         gtx = (
             (existing[0][1] + 1, new[0][1]),
             (new[1][0], new[1][1]),
-            (new[2][0], new[2][1])
+            (new[2][0], new[2][1]),
         )
         splitted.append(gtx)
 
@@ -51,14 +55,14 @@ def split_new_cuboid(existing: Cuboid, new: Cuboid):
         lty = (
             (max(existing[0][0], new[0][0]), min(existing[0][1], new[0][1])),
             (new[1][0], existing[1][0] - 1),
-            (new[2][0], new[2][1])
+            (new[2][0], new[2][1]),
         )
         splitted.append(lty)
     if new[1][1] > existing[1][1]:
         gty = (
             (max(existing[0][0], new[0][0]), min(existing[0][1], new[0][1])),
             (existing[1][1] + 1, new[1][1]),
-            (new[2][0], new[2][1])
+            (new[2][0], new[2][1]),
         )
         splitted.append(gty)
 
@@ -100,7 +104,9 @@ def calc_new_cuboids(cuboid: Cuboid, existing: List[Cuboid]):
 
 
 def test_calc_cuboids():
-    new_cuboids = calc_new_cuboids(((-20, 33), (-21, 23), (-26, 28)), [((-20, 26), (-36, 17), (-47, 7))])
+    new_cuboids = calc_new_cuboids(
+        ((-20, 33), (-21, 23), (-26, 28)), [((-20, 26), (-36, 17), (-47, 7))]
+    )
     assert new_cuboids
 
 
@@ -129,7 +135,11 @@ def run(input: str, part1=True):
 
         instruction, coords = line.split(" ", 1)
         xaxis, yaxis, zaxis = (q.split("=")[1].split("..") for q in coords.split(","))
-        cuboid = ((int(xaxis[0]), int(xaxis[1])), (int(yaxis[0]), int(yaxis[1])), (int(zaxis[0]), int(zaxis[1])))
+        cuboid = (
+            (int(xaxis[0]), int(xaxis[1])),
+            (int(yaxis[0]), int(yaxis[1])),
+            (int(zaxis[0]), int(zaxis[1])),
+        )
 
         if instruction == "on":
             all_cuboids.extend(calc_new_cuboids(cuboid, all_cuboids))
@@ -154,7 +164,11 @@ def run(input: str, part1=True):
             ymin, ymax = max(-50, ymin), min(50, ymax)
             zmin, zmax = max(-50, zmin), min(50, zmax)
 
-        lenx, leny, lenz = 1 + len(range(xmin, xmax)), 1 + len(range(ymin, ymax)), 1 + len(range(zmin, zmax))
+        lenx, leny, lenz = (
+            1 + len(range(xmin, xmax)),
+            1 + len(range(ymin, ymax)),
+            1 + len(range(zmin, zmax)),
+        )
 
         sum += lenx * leny * lenz
     return sum

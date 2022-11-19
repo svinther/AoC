@@ -36,7 +36,7 @@ def run_for_pair(db, pair, cur, max, cache):
     if cache_key in cache:
         return cache[cache_key]
 
-    counts_=defaultdict(int)
+    counts_ = defaultdict(int)
 
     p0, p1 = pair
     px = db[pair]
@@ -52,11 +52,12 @@ def run_for_pair(db, pair, cur, max, cache):
     cache[cache_key] = counts_
     return counts_
 
+
 # Used for part 1
 def step(db, seq):
     result = []
     for pos in range(len(seq) - 1):
-        p0, p1 = seq[pos:pos + 2]
+        p0, p1 = seq[pos : pos + 2]
         lookup = db[(p0, p1)]
         result.append(p0)
         result.append(lookup)
@@ -65,11 +66,11 @@ def step(db, seq):
 
 
 def all_steps(db, seq, steps):
-    cache={}
+    cache = {}
     counts = defaultdict(int)
     # This counts all the items we insert to original sequence
     for pos in range(len(seq) - 1):
-        pair = tuple(seq[pos:pos + 2])
+        pair = tuple(seq[pos : pos + 2])
         counts_ = run_for_pair(db, pair, 0, steps - 1, cache)
         for p, count in counts_.items():
             counts[p] += count
@@ -84,7 +85,9 @@ def print_result(counts):
     counts_sorted = sorted(counts.items(), key=itemgetter(1))
     least_x, least_num = counts_sorted[0]
     most_x, most_num = counts_sorted[-1]
-    print(f"Least {least_x}/{least_num}  -  most {most_x}/{most_num}  -> Result: {most_num - least_num}")
+    print(
+        f"Least {least_x}/{least_num}  -  most {most_x}/{most_num}  -> Result: {most_num - least_num}"
+    )
 
 
 for num, data in enumerate(inputs, start=1):
@@ -117,4 +120,3 @@ for num, data in enumerate(inputs, start=1):
     # Now for real
     counts = all_steps(M, S[0], 40)
     print_result(counts)
-

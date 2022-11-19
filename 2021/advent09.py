@@ -11,7 +11,9 @@ from operator import itemgetter
 import requests
 
 cookie = "xxx"
-response = requests.get("https://adventofcode.com/2021/day/9/input", headers={"cookie": cookie})
+response = requests.get(
+    "https://adventofcode.com/2021/day/9/input", headers={"cookie": cookie}
+)
 input_data = response.text
 
 data = [[int(c) for c in l] for l in input_data.split("\n") if l]
@@ -32,7 +34,7 @@ for y, row in enumerate(data):
     for x, value in enumerate(row):
         if is_low_point(x, y):
             low_points.append(((x, y), value))
-            sum += (value + 1)
+            sum += value + 1
 print(sum)
 
 used_areas = set()
@@ -60,7 +62,9 @@ for y, row in enumerate(data):
             basins.append(basin)
 
 for n, basin in enumerate(basins, start=1):
-    print(f"{n} (size={len(basin)}): {sorted(sorted(basin, key=itemgetter(1)), key=itemgetter(0))}")
+    print(
+        f"{n} (size={len(basin)}): {sorted(sorted(basin, key=itemgetter(1)), key=itemgetter(0))}"
+    )
 
 basin_sizes = [len(x) for x in basins]
 max3_basins = sorted(basin_sizes)[-3:]
