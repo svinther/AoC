@@ -134,7 +134,7 @@ print(len(all_beacons))
 
 maxmanhattan = (0, None, None)
 for p0, p1 in combinations(distances.values(), 2):
-    manhattan = sum(tuple(abs(a-b) for a,b in zip(p0,p1)))
+    manhattan = sum(tuple(abs(a - b) for a, b in zip(p0, p1)))
     if manhattan > maxmanhattan[0]:
         maxmanhattan = manhattan, p0, p1
 

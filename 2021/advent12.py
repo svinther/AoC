@@ -27,11 +27,10 @@ YZ-end
 """
 
 
-
 connections = {}
 for l in input.split("\n"):
     if l:
-        a,b = l.split("-")
+        a, b = l.split("-")
         connections.setdefault(a, []).append(b)
         connections.setdefault(b, []).append(a)
 
@@ -51,22 +50,24 @@ def calc_paths_to_end(complete_paths, path, small_caves_visited):
     if 3 in visits_per_cave.values():
         return
     # did we visit more than a single cave twice ?
-    if Counter(visits_per_cave.values()).get(2,0) > 1:
+    if Counter(visits_per_cave.values()).get(2, 0) > 1:
         return
 
     if cave == "end":
         complete_paths.append(path)
     else:
         for next_cave in connections.get(cave):
-            calc_paths_to_end(complete_paths, path + [next_cave], small_caves_visited.copy())
-
+            calc_paths_to_end(
+                complete_paths, path + [next_cave], small_caves_visited.copy()
+            )
 
 
 import timeit
+
 start = timeit.default_timer()
 
-paths=[]
-path=["start"]
+paths = []
+path = ["start"]
 for next_cave in connections.get("start"):
     calc_paths_to_end(paths, path + [next_cave], [])
 
@@ -75,7 +76,4 @@ for next_cave in connections.get("start"):
 
 print(len(paths))
 stop = timeit.default_timer()
-print('Time: ', stop - start)
-
-
-
+print("Time: ", stop - start)

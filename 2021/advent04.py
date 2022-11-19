@@ -32,17 +32,23 @@ inputs = [
 with open(f"input.{year}.{day}.txt", "r") as iopen:
     inputs.append(iopen.read())
 
-ROWSIZE=5
-COLSIZE=5
+ROWSIZE = 5
+COLSIZE = 5
+
 
 def get_rows(board):
-    return [board[n*ROWSIZE:n*ROWSIZE+ROWSIZE] for n in range(0,len(board) // ROWSIZE)]
+    return [
+        board[n * ROWSIZE : n * ROWSIZE + ROWSIZE]
+        for n in range(0, len(board) // ROWSIZE)
+    ]
+
 
 def get_cols(board):
-    d=defaultdict(list)
+    d = defaultdict(list)
     for n in range(0, len(board)):
-        d[n%ROWSIZE].append(board[n])
-    return [v for k,v in sorted(d.items())]
+        d[n % ROWSIZE].append(board[n])
+    return [v for k, v in sorted(d.items())]
+
 
 def visualize_board(board):
     for row in get_rows(board):
@@ -59,26 +65,28 @@ def get_winner(boards, announced):
 
 
 for num, data in enumerate(inputs, start=1):
-    B=[]
-    S=None
+    B = []
+    S = None
 
     current_board = []
     for line in data.split("\n"):
         stripped = line.strip()
         if not S:
-            S=[int(c) for c in line.split(",")]
+            S = [int(c) for c in line.split(",")]
         elif stripped:
             board_row = [int(n) for n in line.split(" ") if n]
             current_board.extend(board_row)
         elif current_board:
-            B.append((
-                current_board,
-                [set(r) for r in get_rows(current_board)],
-                [set(c) for c in get_cols(current_board)]
-            ))
-            current_board=[]
+            B.append(
+                (
+                    current_board,
+                    [set(r) for r in get_rows(current_board)],
+                    [set(c) for c in get_cols(current_board)],
+                )
+            )
+            current_board = []
 
-    announced=set()
+    announced = set()
     for num in S:
         announced.add(num)
 
@@ -94,10 +102,6 @@ for num, data in enumerate(inputs, start=1):
             visualize_board(last_winner)
             print(num)
             unmarked = set(last_winner) - announced
-            unmarked_sum = reduce(lambda a,b:a+b, unmarked)
+            unmarked_sum = reduce(lambda a, b: a + b, unmarked)
             print(f"Unmarked sum: {unmarked_sum} -> Final score {unmarked_sum * num}")
             break
-
-
-
-

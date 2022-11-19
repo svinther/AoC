@@ -5,7 +5,8 @@ year = 2021
 
 inputs = []
 
-inputs.append("""\
+inputs.append(
+    """\
 6,10
 0,14
 9,10
@@ -27,12 +28,13 @@ inputs.append("""\
 
 fold along y=7
 fold along x=5
-""")
-
+"""
+)
 
 
 with open(f"input.{year}.{day}.txt", "r") as iopen:
     inputs.append(iopen.read())
+
 
 def parse(input):
     p_coord = re.compile("(\d+),(\d+)")
@@ -82,7 +84,7 @@ def fold_up(coord, fold_line):
 
 
 def visualize(field, coords):
-    row = ['.' for x in range(field[0])]
+    row = ["." for x in range(field[0])]
     rows = [row.copy() for y in range(field[1])]
 
     for x, y in coords:

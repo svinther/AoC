@@ -8,7 +8,7 @@ with open(f"input.{year}.{day}.txt", "r") as iopen:
 
 
 def enhance(img, iea, i):
-    pad = '.' if i % 2 == 0 else '#'
+    pad = "." if i % 2 == 0 else "#"
     # Raw input image width, now surround with extra layer of dark pixels
     WRAW = img.find("\n")
     W = WRAW + 2
@@ -27,9 +27,15 @@ def enhance(img, iea, i):
         for x in range(len(input_img[y])):
             pix3x3_str = []
             for x_, y_ in [
-                (x - 1, y - 1), (x, y - 1), (x + 1, y - 1),
-                (x - 1, y), (x, y), (x + 1, y),
-                (x - 1, y + 1), (x, y + 1), (x + 1, y + 1),
+                (x - 1, y - 1),
+                (x, y - 1),
+                (x + 1, y - 1),
+                (x - 1, y),
+                (x, y),
+                (x + 1, y),
+                (x - 1, y + 1),
+                (x, y + 1),
+                (x + 1, y + 1),
             ]:
                 if x_ < 0 or x_ >= len(input_img[y]) or y_ < 0 or y_ >= len(input_img):
                     pix3x3_str.append(pad)
@@ -40,7 +46,7 @@ def enhance(img, iea, i):
             pix3x3_dec = 0
             for i, c in enumerate(reversed(pix3x3_str)):
                 if c == "#":
-                    pix3x3_dec += 2 ** i
+                    pix3x3_dec += 2**i
             bit9_decimals.append(pix3x3_dec)
 
     outputimg = []
@@ -49,7 +55,7 @@ def enhance(img, iea, i):
             outputimg.append("\n")
         outputimg.append(iea[d])
     outputimg.append("\n")
-    return ''.join(outputimg)
+    return "".join(outputimg)
 
 
 # image enhancement algorithm and input image
@@ -62,5 +68,5 @@ for i in range(50):
 
 for i, output in enumerate(outputs):
     print(output)
-    print("Output", i, "W=", output.find('\n'), "H=", output.count("\n"))
+    print("Output", i, "W=", output.find("\n"), "H=", output.count("\n"))
     print(output.count("#"))

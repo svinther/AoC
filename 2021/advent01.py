@@ -3,7 +3,8 @@ from functools import reduce
 year = 2021
 day = 1
 
-inputs = ["""\
+inputs = [
+    """\
 199
 200
 208
@@ -14,7 +15,8 @@ inputs = ["""\
 269
 260
 263
-"""]
+"""
+]
 
 with open(f"input.{year}.{day}.txt", "r") as iopen:
     inputs.append(iopen.read())
@@ -24,7 +26,7 @@ def calculate_increases(samples):
     score = 0
     last = None
     for i in range(0, len(samples) - len(samples) % 3):
-        bucket = samples[i:i + 3]
+        bucket = samples[i : i + 3]
         bucket_sum = reduce(lambda a, b: a + b, bucket)
         if i > 0 and bucket_sum > last:
             score += 1

@@ -42,7 +42,7 @@ def adjecants(m, p, used):
     for xn, yn in (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1):
         if xn >= 0 and yn >= 0 and xn <= end[0] and yn <= end[1]:
             if (xn, yn) not in used:
-                result[(xn, yn)]= (risk + m[yn][xn], (xn, yn))
+                result[(xn, yn)] = (risk + m[yn][xn], (xn, yn))
     return result
 
 
@@ -54,7 +54,6 @@ for num, data in enumerate(inputs, start=1):
         if line:
             R = [int(c) for c in list(line)]
             MAP_.append(R)
-
 
     # Scale up to 5X larger map
     H = len(MAP_)
