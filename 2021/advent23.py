@@ -1,6 +1,9 @@
 import time
+from collections import defaultdict
 from queue import PriorityQueue
 from typing import List, Tuple, NamedTuple, Optional, Dict, Set
+
+from sortedcontainers import SortedDict
 
 CAVEX: Dict[int, str] = {3: "A", 5: "B", 7: "C", 9: "D"}
 CAVEX_INV: Dict[str, int] = {v: k for k, v in CAVEX.items()}
@@ -164,21 +167,22 @@ def solve(state: State, end: State):
     visited: Set[State] = set()
     Q: Set[State] = set()
 
-    S = PriorityQueue()
-    S.put((0, state))
+    # Dict[int,Set[State]]
+    S = SortedDict()
+
+    S.setdefault(0, set()).add(state)
     Q = {state}
     t0 = time.process_time()
     while True:
-        current_cost, current = S.get(block=False)
-        while True:
-            # re-sort until the cost is correct, as an easier path may exist
-            # now compared to when the state was added to S
-            if current_cost == costs[current]:
-                break
-            S.put((costs[current], current))
-            current_cost, current = S.get(block=False)
-
+        assert sum([len(s) for s in S.values()]) == len(Q)
+        current_cost, current_cost_bucket = S.peekitem(index=0)
+        current = current_cost_bucket.pop()
+        if current not in Q:
+            print()
+        if not current_cost_bucket:
+            del S[current_cost]
         Q.remove(current)
+        assert sum([len(s) for s in S.values()]) == len(Q)
 
         if current == end:
             # This rendering only works for part1
@@ -197,22 +201,33 @@ def solve(state: State, end: State):
         visited_count = len(visited)
         if visited_count % 500 == 0:
             t = time.process_time()
-            print(f"Visitied {visited_count}", visited_count / (t - t0))
+            print(f"Visited {visited_count}", visited_count / (t - t0))
         Tnew = moves(current)
-        for t in Tnew:
-            cost = t.cost + costs[current]
+        for t_cost, t_state in Tnew:
+            cost = t_cost + current_cost
+            if t_state not in costs:
+                # Never seen this state before
+                costs[t_state] = cost
+                last[t_state] = current
 
-            if t.state not in costs or costs[t.state] > cost:
-                costs[t.state] = cost
-                last[t.state] = current
-                # min_costs_to_finish[t.state] = min_cost_to_finish(t.state, cost)
-
-            if t.state in visited or t.state in Q:
-                continue
-
-            assert t.state not in Q
-            S.put((cost, t.state))
-            Q.add(t.state)
+                S.setdefault(cost, set()).add(t_state)
+                Q.add(t_state)
+                assert sum([len(s) for s in S.values()]) == len(Q)
+            elif costs[t_state] > cost:
+                # Found cheaper path to t_state, update the cost in S
+                assert t_state not in visited
+                old_cost = costs[t_state]
+                costs[t_state] = cost
+                if t_state in Q:
+                    cost_bucket = S[old_cost]
+                    cost_bucket.remove(t_state)
+                    if not cost_bucket:
+                        del S[old_cost]
+                    S.setdefault(cost, set()).add(t_state)
+                    assert sum([len(s) for s in S.values()]) == len(Q)
+            elif t_state in visited:
+                assert t_state not in Q
+                assert t_state not in S.get(cost, set())
 
 
 def parse(input: str) -> State:
