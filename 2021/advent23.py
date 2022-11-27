@@ -27,14 +27,6 @@ class StateEntry(NamedTuple):
 State = Tuple[StateEntry]
 
 
-def get_from_state(state: State, coord: Coord) -> Optional[str]:
-    l = [x[1] for x in state if x[0] == coord]
-    if l:
-        assert len(l) == 1
-        return l[0]
-    return None
-
-
 class Transition(NamedTuple):
     cost: int
     state: State
@@ -47,7 +39,7 @@ def transition(state: State, start: Coord, dest: Coord) -> Transition:
     assert dest not in state
     moves_y = HALLWAY_Y - start.y + HALLWAY_Y - dest.y
     moves_x = abs(start.x - dest.x)
-    app_to_move = get_from_state(state, start)
+    app_to_move = next(x[1] for x in state if x[0] == start)
     cost = MOVE_COST[app_to_move] * (moves_x + moves_y)
     next_state: State = tuple(
         sorted(
