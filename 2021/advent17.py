@@ -37,7 +37,8 @@ def solve(box: Box) -> Tuple[int, int]:
     maxy = -1
     initial_velocities = []
     while True:
-        if sum(range(1, limitvx_min + 2)) >= box.xmin:
+        # xs = (vx * (vx+1)) / 2 (sum of first n natural numbers)
+        if limitvx_min * (limitvx_min + 1) / 2 >= box.xmin:
             break
         limitvx_min += 1
     limitvx_max = box.xmax + 1
