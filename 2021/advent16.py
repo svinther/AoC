@@ -1,3 +1,4 @@
+from functools import reduce
 from pathlib import Path
 from typing import NamedTuple, List, Union, Tuple
 
@@ -31,6 +32,41 @@ def solve(parsed):
 
 def hex2bin(hexnumber: str):
     return "".join([bin(int(d, 16))[2:].zfill(4) for d in hexnumber])
+
+
+def evaluate(packet: Union[LiteralPacket, "OperatorPacket"]) -> int:
+    if isinstance(packet, LiteralPacket):
+        return packet.data
+
+    sub_evaluated: List[int] = [evaluate(s) for s in packet.subpackets]
+    if packet.ptype == 0:  # sum
+        return sum(sub_evaluated)
+
+    if packet.ptype == 1:  # product
+        return reduce(lambda a, b: a * b, sub_evaluated)
+
+    if packet.ptype == 2:  # min
+        return min(sub_evaluated)
+
+    if packet.ptype == 3:  # max
+        return max(sub_evaluated)
+
+    if packet.ptype == 5:  # gt
+        assert len(sub_evaluated) == 2
+        l, r = sub_evaluated
+        return 1 if l > r else 0
+
+    if packet.ptype == 6:  # lt
+        assert len(sub_evaluated) == 2
+        l, r = sub_evaluated
+        return 1 if l < r else 0
+
+    if packet.ptype == 7:  # gt
+        assert len(sub_evaluated) == 2
+        l, r = sub_evaluated
+        return 1 if l == r else 0
+
+    assert False
 
 
 def parse(input_: str) -> Tuple[Union[LiteralPacket, OperatorPacket], int]:
@@ -135,7 +171,27 @@ def test_operator3_1(hexinput: str, versionsum: int):
     assert calc_versionsum(packet) == versionsum
 
 
+part2_testdata = [
+    ("C200B40A82", 3),
+    ("04005AC33890", 54),
+    ("880086C3E88112", 7),
+    ("CE00C43D881120", 9),
+    ("D8005AC2A8F0", 1),
+    ("F600BC2D8F", 0),
+    ("9C005AC2F8F0", 0),
+    ("9C0141080250320F1802104A08", 1),
+]
+
+
+@pytest.mark.parametrize("hexinput,result", part2_testdata)
+def test_part2(hexinput: str, result: int):
+    binary = hex2bin(hexinput)
+    packet, length = parse(binary)
+    assert evaluate(packet) == result
+
+
 if __name__ == "__main__":
     binary = hex2bin(full_input_)
     packet, length = parse(binary)
-    print(calc_versionsum(packet))
+    print("p1", calc_versionsum(packet))
+    print("p2", evaluate(packet))
