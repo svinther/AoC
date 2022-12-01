@@ -1,8 +1,6 @@
 from collections import defaultdict, deque
-from copy import copy
-from pathlib import Path
 
-DAY = 1
+DAY = 15
 full_input_ = "6,19,0,5,7,13,1"
 
 
