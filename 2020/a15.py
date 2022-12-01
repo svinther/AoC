@@ -33,14 +33,11 @@ def gen(parsed):
         yield nextnum
 
 
-def solvep1(parsed, rounds):
-    turns = [(i, n) for i, n in zip(range(1, rounds + 1), gen(parsed))]
-    return turns[-1]
-
-
-def solvep2(parsed, rounds):
-    turns = [(i, n) for i, n in zip(range(1, rounds + 1), gen(parsed))]
-    return turns[-1]
+def solve(parsed, rounds):
+    last = None
+    for i, turn in zip(range(1, rounds + 1), gen(parsed)):
+        last = (i, turn)
+    return last
 
 
 def parse(input: str):
@@ -54,14 +51,14 @@ def parse(input: str):
 
 
 def testp1():
-    assert solvep1(parse("0,3,6"), 10) == (10, 0)
-    assert solvep1(parse("1,3,2"), 2020) == (2020, 1)
+    assert solve(parse("0,3,6"), 10) == (10, 0)
+    assert solve(parse("1,3,2"), 2020) == (2020, 1)
 
 
 if __name__ == "__main__":
     parsed = parse(full_input_)
-    result = solvep1(parsed, 2020)
+    result = solve(parsed, 2020)
     print(result)
 
-    result = solvep2(parsed, 30000000)
+    result = solve(parsed, 30000000)
     print(result)
