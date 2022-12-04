@@ -1,67 +1,58 @@
 from itertools import product
 from pathlib import Path
+from typing import NamedTuple, List, Dict, Union
 
 DAY = 19
 full_input_ = Path(f"{DAY}.txt").read_text()
 
 
-def combos(rules, num) -> set:
-    rule_alts = rules[num]
-    comb = set()
-    for alt in rule_alts:
-        if alt == "a" or alt == "b":
-            comb.add(alt)
-        else:
-            # produce a list of string alternation sets [{"aa", "bb"}, {"ab", "ba"}, ..]
-            recursive_combo = [combos(rules, n) for n in alt]
-            for p in product(*recursive_combo):
-                comb.add("".join(p))
-    assert comb
-    return comb
+class LiteralNode(NamedTuple):
+    value: str
 
 
-def test_combos():
-    r = """\
-0: 1 2
-1: "a"
-2: 1 3 | 3 1
-3: "b"    
-"""
-    rules = parse_rules(r)
-    assert combos(rules, 1) == {"a"}
-    assert combos(rules, 3) == {"b"}
-    assert combos(rules, 2) == {"ab", "ba"}
-    assert combos(rules, 0) == {"aab", "aba"}
-
-    r = """\
-0: 4 1 5
-1: 2 3 | 3 2
-2: 4 4 | 5 5
-3: 4 5 | 5 4
-4: "a"
-5: "b"
-"""
-    rules = parse_rules(r)
-    assert combos(rules, 4) == {"a"}
-    assert combos(rules, 5) == {"b"}
-    combos2 = combos(rules, 2)
-    combos3 = combos(rules, 3)
-    combos1 = combos(rules, 1)
-    assert combos1 == {"".join(p) for p in product(combos2, combos3)} | {
-        "".join(p) for p in product(combos3, combos2)
-    }
+class RuleReferenceNode(NamedTuple):
+    rulerefs: List[int]
 
 
-def verify(rules, pattern, gobble):
-    if not pattern and not gobble:
+class AlternateNode(NamedTuple):
+    left: RuleReferenceNode
+    right: RuleReferenceNode
+
+
+def gobble_(
+    rules: Dict[int, Union[LiteralNode, RuleReferenceNode, AlternateNode]],
+    rule: Union[LiteralNode, RuleReferenceNode, AlternateNode],
+    text: list,
+) -> bool:
+    if isinstance(rule, LiteralNode):
+        if text[0] == rule.value:
+            text.pop(0)
+            return True
+        return False
+    elif isinstance(rule, RuleReferenceNode):
+        for rr in rule.rulerefs:
+            if not gobble_(rules, rules[rr], text):
+                return False
         return True
-    elif pattern and gobble:
-        p = pattern[0]
-        for combo in combos(rules, p):
-            if gobble[: len(combo)] == combo:
-                if verify(rules, pattern[1:], gobble[len(combo) :]):
-                    return True
-    return False
+    elif isinstance(rule, AlternateNode):
+        for an in rule.left, rule.right:
+            text_ = text.copy()
+            if gobble_(rules, an, text_):
+                text.clear()
+                text.extend(text_)
+                return True
+        return False
+    else:
+        assert False
+
+
+def gobble(
+    rules: Dict[int, Union[LiteralNode, RuleReferenceNode, AlternateNode]],
+    rule: Union[LiteralNode, RuleReferenceNode, AlternateNode],
+    text: list,
+) -> bool:
+    result = gobble_(rules, rule, text)
+    return result and len(text) == 0
 
 
 def test_verify():
@@ -74,25 +65,40 @@ def test_verify():
 5: "b"
 """
     rules = parse_rules(r)
-    assert verify(rules, [4], "a") is True
-    assert verify(rules, [3], "ab") is True
-    assert verify(rules, [3], "ba") is True
-    assert verify(rules, [2], "aa") is True
-    assert verify(rules, [2], "bb") is True
-    assert verify(rules, [1], "aaab") is True
-    assert verify(rules, [1], "abaa") is True
-    assert verify(rules, [0], "ababbb") is True
+    assert gobble(rules, rules[4], list("a")) is True
+    assert gobble(rules, rules[4], list("b")) is False
+    assert gobble(rules, rules[4], list("aa")) is False
+
+    assert gobble(rules, rules[3], list("ab")) is True
+    assert gobble(rules, rules[3], list("ba")) is True
+    assert gobble(rules, rules[2], list("aa")) is True
+    assert gobble(rules, rules[2], list("bb")) is True
+    assert gobble(rules, rules[1], list("aaab")) is True
+    assert gobble(rules, rules[1], list("abaa")) is True
+    assert gobble(rules, rules[0], list("ababbb")) is True
 
 
-def solve(parsed):
+def solvep1(parsed):
     rules, texts = parsed
     result = []
     for text in texts:
-        result.append(verify(rules, rules[0][0], text))
+        result.append(gobble(rules, rules[0], list(text)))
     return len([x for x in result if x is True])
 
 
-def readnums(expr):
+def solvep2(parsed):
+    rules, texts = parsed
+    rules[8] = AlternateNode(RuleReferenceNode([42]), RuleReferenceNode([42, 8]))
+    rules[11] = AlternateNode(
+        RuleReferenceNode([42, 31]), RuleReferenceNode([42, 11, 31])
+    )
+    result = []
+    for text in texts:
+        result.append(gobble(rules, rules[0], list(text)))
+    return len([x for x in result if x is True])
+
+
+def readnums(expr) -> List[int]:
     result = []
     for c in expr.split(" "):
         c = c.strip()
@@ -103,7 +109,7 @@ def readnums(expr):
 
 
 def parse_rules(chunk: str):
-    rules = {}
+    rules: Dict[int, Union[LiteralNode, RuleReferenceNode, AlternateNode]] = {}
     for l in chunk.split("\n"):
         l = l.strip()
         if not l:
@@ -114,12 +120,14 @@ def parse_rules(chunk: str):
         if '"' in expr:
             lit = [c for c in expr if c in {"a", "b"}]
             assert len(lit) == 1
-            rules[rulenum] = lit
+            rules[rulenum] = LiteralNode(lit[0])
         elif "|" in expr:
             altleft, altright = expr.split("|")
-            rules[rulenum] = [readnums(altleft), readnums(altright)]
+            left = RuleReferenceNode(readnums(altleft))
+            right = RuleReferenceNode(readnums(altright))
+            rules[rulenum] = AlternateNode(left, right)
         else:
-            rules[rulenum] = [readnums(expr)]
+            rules[rulenum] = RuleReferenceNode(readnums(expr))
     return rules
 
 
@@ -156,11 +164,14 @@ aaabbb
 aaaabbb
 """
     parsed = parse(input_)
-    result = solve(parsed)
+    result = solvep1(parsed)
     assert result == 2
 
 
 if __name__ == "__main__":
     parsed = parse(full_input_)
-    result = solve(parsed)
+    result = solvep1(parsed)
+    print(result)
+
+    result = solvep2(parsed)
     print(result)
