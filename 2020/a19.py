@@ -1,4 +1,3 @@
-from itertools import product
 from pathlib import Path
 from typing import NamedTuple, List, Dict, Union
 
@@ -19,40 +18,27 @@ class AlternateNode(NamedTuple):
     right: RuleReferenceNode
 
 
-def gobble_(
-    rules: Dict[int, Union[LiteralNode, RuleReferenceNode, AlternateNode]],
-    rule: Union[LiteralNode, RuleReferenceNode, AlternateNode],
-    text: list,
-) -> bool:
-    if isinstance(rule, LiteralNode):
-        if text[0] == rule.value:
-            text.pop(0)
-            return True
-        return False
-    elif isinstance(rule, RuleReferenceNode):
-        for rr in rule.rulerefs:
-            if not gobble_(rules, rules[rr], text):
-                return False
-        return True
-    elif isinstance(rule, AlternateNode):
-        for an in rule.left, rule.right:
-            text_ = text.copy()
-            if gobble_(rules, an, text_):
-                text.clear()
-                text.extend(text_)
-                return True
-        return False
-    else:
-        assert False
-
-
 def gobble(
     rules: Dict[int, Union[LiteralNode, RuleReferenceNode, AlternateNode]],
-    rule: Union[LiteralNode, RuleReferenceNode, AlternateNode],
-    text: list,
+    rulestack: List[Union[LiteralNode, RuleReferenceNode, AlternateNode]],
+    text: str,
 ) -> bool:
-    result = gobble_(rules, rule, text)
-    return result and len(text) == 0
+    if len(rulestack) == 0 or len(text) == 0:
+        return len(rulestack) == 0 and len(text) == 0
+
+    rule = rulestack.pop()
+
+    if isinstance(rule, LiteralNode):
+        if text[0] == rule.value:
+            return gobble(rules, rulestack, text[1:])
+    elif isinstance(rule, RuleReferenceNode):
+        rulestack.extend(reversed([rules[rr] for rr in rule.rulerefs]))
+        return gobble(rules, rulestack, text)
+    elif isinstance(rule, AlternateNode):
+        for an in (rule.left, rule.right):
+            if gobble(rules, rulestack + [an], text):
+                return True
+    return False
 
 
 def test_verify():
@@ -65,24 +51,23 @@ def test_verify():
 5: "b"
 """
     rules = parse_rules(r)
-    assert gobble(rules, rules[4], list("a")) is True
-    assert gobble(rules, rules[4], list("b")) is False
-    assert gobble(rules, rules[4], list("aa")) is False
-
-    assert gobble(rules, rules[3], list("ab")) is True
-    assert gobble(rules, rules[3], list("ba")) is True
-    assert gobble(rules, rules[2], list("aa")) is True
-    assert gobble(rules, rules[2], list("bb")) is True
-    assert gobble(rules, rules[1], list("aaab")) is True
-    assert gobble(rules, rules[1], list("abaa")) is True
-    assert gobble(rules, rules[0], list("ababbb")) is True
+    assert gobble(rules, [rules[4]], "a") is True
+    assert gobble(rules, [rules[4]], "b") is False
+    assert gobble(rules, [rules[4]], "aa") is False
+    assert gobble(rules, [rules[3]], "ab") is True
+    assert gobble(rules, [rules[3]], "ba") is True
+    assert gobble(rules, [rules[2]], "aa") is True
+    assert gobble(rules, [rules[2]], "bb") is True
+    assert gobble(rules, [rules[1]], "aaab") is True
+    assert gobble(rules, [rules[1]], "abaa") is True
+    assert gobble(rules, [rules[0]], "ababbb") is True
 
 
 def solvep1(parsed):
     rules, texts = parsed
     result = []
     for text in texts:
-        result.append(gobble(rules, rules[0], list(text)))
+        result.append(gobble(rules, [rules[0]], text))
     return len([x for x in result if x is True])
 
 
@@ -94,7 +79,7 @@ def solvep2(parsed):
     )
     result = []
     for text in texts:
-        result.append(gobble(rules, rules[0], list(text)))
+        result.append(gobble(rules, [rules[0]], text))
     return len([x for x in result if x is True])
 
 
@@ -166,6 +151,55 @@ aaaabbb
     parsed = parse(input_)
     result = solvep1(parsed)
     assert result == 2
+
+
+def test_p2():
+    input_ = """\
+42: 9 14 | 10 1
+9: 14 27 | 1 26
+10: 23 14 | 28 1
+1: "a"
+11: 42 31
+5: 1 14 | 15 1
+19: 14 1 | 14 14
+12: 24 14 | 19 1
+16: 15 1 | 14 14
+31: 14 17 | 1 13
+6: 14 14 | 1 14
+2: 1 24 | 14 4
+0: 8 11
+13: 14 3 | 1 12
+15: 1 | 14
+17: 14 2 | 1 7
+23: 25 1 | 22 14
+28: 16 1
+4: 1 1
+20: 14 14 | 1 15
+3: 5 14 | 16 1
+27: 1 6 | 14 18
+14: "b"
+21: 14 1 | 1 14
+25: 1 1 | 1 14
+22: 14 14
+8: 42
+26: 14 22 | 1 20
+18: 15 15
+7: 14 5 | 1 21
+24: 14 1
+"""
+    rules = parse_rules(input_)
+    assert solvep2((rules, ["bbabbbbaabaabba"]))
+    assert solvep2((rules, ["aaabbbbbbaaaabaababaabababbabaaabbababababaaa"]))
+    assert solvep2((rules, ["ababaaaaaabaaab"]))
+    assert solvep2((rules, ["ababaaaaabbbaba"]))
+    assert solvep2((rules, ["baabbaaaabbaaaababbaababb"]))
+    assert solvep2((rules, ["abbbbabbbbaaaababbbbbbaaaababb"]))
+    assert solvep2((rules, ["aaaaabbaabaaaaababaa"]))
+    assert solvep2((rules, ["aaaabbaabbaaaaaaabbbabbbaaabbaabaaa"]))
+    assert solvep2((rules, ["aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"]))
+    assert solvep2((rules, ["babbbbaabbbbbabbbbbbaabaaabaaa"]))
+    assert solvep2((rules, ["bbbbbbbaaaabbbbaaabbabaaa"]))
+    assert solvep2((rules, ["bbbababbbbaaaaaaaabbababaaababaabab"]))
 
 
 if __name__ == "__main__":
