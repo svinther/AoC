@@ -1,4 +1,6 @@
 from functools import reduce
+from itertools import product
+from operator import mul
 from pathlib import Path
 from typing import NamedTuple
 
@@ -11,20 +13,20 @@ class Coord(NamedTuple):
     y: int
 
 
-def search_higher(matrix, coord, highestseen, searchf):
+def search_higher(matrix, coord, highestseen, direction):
     xmax = len(matrix[0]) - 1
     ymax = len(matrix) - 1
 
     if highestseen == 9:
         return set()
 
-    nextcoord = searchf(coord)
+    nextcoord = Coord(coord.x + direction.x, coord.y + direction.y)
     if xmax > nextcoord.x > 0 and ymax > nextcoord.y > 0:
         height = matrix[nextcoord.y][nextcoord.x]
         if height > highestseen:
-            return {nextcoord} | search_higher(matrix, nextcoord, height, searchf)
+            return {nextcoord} | search_higher(matrix, nextcoord, height, direction)
         else:
-            return search_higher(matrix, nextcoord, highestseen, searchf)
+            return search_higher(matrix, nextcoord, highestseen, direction)
     else:
         return set()
 
@@ -39,52 +41,48 @@ def solve(matrix):
 
     visible = Etop | Ebot | Eleft | Eright
     for E, searchf in [
-        (Etop, lambda c: Coord(c.x, c.y + 1)),
-        (Ebot, lambda c: Coord(c.x, c.y - 1)),
-        (Eleft, lambda c: Coord(c.x + 1, c.y)),
-        (Eright, lambda c: Coord(c.x - 1, c.y)),
+        (Etop, Coord(0, 1)),
+        (Ebot, Coord(0, -1)),
+        (Eleft, Coord(1, 0)),
+        (Eright, Coord(-1, 0)),
     ]:
         for c in E:
             visible.update(search_higher(matrix, c, matrix[c.y][c.x], searchf))
     return visible
 
 
-def viewscore(matrix, coord, maxheight, searchf):
+def viewscore(matrix, coord, maxheight, direction):
     xmax = len(matrix[0]) - 1
     ymax = len(matrix) - 1
-    nextcoord = searchf(coord)
+    nextcoord = Coord(coord.x + direction.x, coord.y + direction.y)
     if xmax > nextcoord.x > 0 and ymax > nextcoord.y > 0:
         height = matrix[nextcoord.y][nextcoord.x]
         if height >= maxheight:
             return 1
         else:
-            return 1 + viewscore(matrix, nextcoord, maxheight, searchf)
+            return 1 + viewscore(matrix, nextcoord, maxheight, direction)
     else:
         return 1
 
 
 def solvep2(matrix):
-    maxscore = 0
-
-    searchfunctions = [
-        lambda c: Coord(c.x, c.y + 1),
-        lambda c: Coord(c.x, c.y - 1),
-        lambda c: Coord(c.x + 1, c.y),
-        lambda c: Coord(c.x - 1, c.y),
-    ]
-
-    for y in range(len(matrix)):
-        for x in range(len(matrix[0])):
-            score = reduce(
-                lambda a, b: a * b,
+    return max(
+        [
+            reduce(
+                mul,
                 [
                     viewscore(matrix, Coord(x, y), matrix[y][x], searchf)
-                    for searchf in searchfunctions
+                    for searchf in [
+                        Coord(0, 1),
+                        Coord(0, -1),
+                        Coord(1, 0),
+                        Coord(-1, 0),
+                    ]
                 ],
             )
-            maxscore = max(maxscore, score)
-
-    return maxscore
+            for x, y in product(range(len(matrix[0])), range(len(matrix)))
+        ]
+    )
 
 
 def parse(input: str):
