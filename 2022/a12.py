@@ -1,5 +1,4 @@
 from copy import copy
-from math import inf
 from pathlib import Path
 
 DAY = 12
@@ -21,10 +20,7 @@ def solve(D, start, end):
     visited = set()
     stack = copy(start)
 
-    while True:
-        if not stack:
-            return inf
-
+    while stack:
         stack.sort(reverse=True, key=lambda xy: costs[xy])
         s = stack.pop()
         if s == end:
@@ -39,12 +35,10 @@ def solve(D, start, end):
             else:
                 costs[nb] = cost
                 if nb not in visited:
-                    if nb in stack:
-                        assert False
+                    assert nb not in stack
                     stack.append(nb)
 
-        if s in stack:
-            assert False
+        assert s not in stack
         visited.add(s)
 
 
