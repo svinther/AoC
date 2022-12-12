@@ -1,4 +1,5 @@
 from copy import copy
+from math import inf
 from pathlib import Path
 
 DAY = 12
@@ -40,6 +41,8 @@ def solve(D, start, end):
 
         assert s not in stack
         visited.add(s)
+
+    return inf
 
 
 def parse(input_: str):
