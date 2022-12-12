@@ -1,3 +1,4 @@
+from copy import copy
 from math import inf
 from pathlib import Path
 
@@ -16,9 +17,9 @@ def get_neighbours(D, xy):
 
 
 def solve(D, start, end):
-    costs = {start: 0}
+    costs = {c: 0 for c in start}
     visited = set()
-    stack = [start]
+    stack = copy(start)
 
     while True:
         if not stack:
@@ -33,7 +34,7 @@ def solve(D, start, end):
         for nb in nbs:
             cost = costs[s] + 1
             if nb in costs:
-                if costs[nb] < cost:
+                if costs[nb] > cost:
                     costs[nb] = cost
             else:
                 costs[nb] = cost
@@ -45,12 +46,6 @@ def solve(D, start, end):
         if s in stack:
             assert False
         visited.add(s)
-
-
-def solvep2(D, start, end):
-    routes = [solve(D, s, end) for s in D if D[s] == ord("a")]
-    routes.sort()
-    return routes[0]
 
 
 def parse(input_: str):
@@ -85,23 +80,33 @@ accszExk
 acctuvwj
 abdefghi
 """
-    parsed = parse(input_)
-    result = solve(*parsed)
+    D, start, end = parse(input_)
+    result = solve(D, [start], end)
     assert result == 31
 
 
 def testp2():
     # input_=Path(f"{DAY}ex.txt").read_text()
     input_ = """\
-
-"""
+Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi
+    """
+    D, start, end = parse(input_)
+    start = [c for c in D if D[c] == ord("a")]
+    result = solve(D, start, end)
+    assert result == 29
 
 
 def run():
-    parsed = parse(full_input_)
-    result = solve(*parsed)
+    D, start, end = parse(full_input_)
+    result = solve(D, [start], end)
     print(result)
-    result = solvep2(*parsed)
+
+    start = [c for c in D if D[c] == ord("a")]
+    result = solve(D, start, end)
     print(result)
 
 
