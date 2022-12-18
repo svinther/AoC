@@ -1,5 +1,7 @@
+import time
 from collections import defaultdict, deque
 from functools import lru_cache
+from itertools import combinations, chain
 from math import inf
 from pathlib import Path
 
@@ -27,11 +29,8 @@ def compact(parsed):
     return edges
 
 
-def solvep1(parsed):
-    edges = compact(parsed)
-    rates = {n: rate for n, rate, nbs in parsed}
+def solve(edges, maxtime, rates, initialopen):
     maxdepth = inf
-    maxtime = 30
 
     @lru_cache(maxsize=None)
     def recurse(t, current, isopen):
@@ -49,6 +48,8 @@ def solvep1(parsed):
         for nb, cost in edges[current].items():
             if nb in isopen:
                 continue
+            if nb not in edges:
+                continue
             assert nb != "AA"
             if t + cost <= maxtime:
                 recurse_score, isopen_ = recurse(t + cost, nb, isopen)
@@ -60,70 +61,48 @@ def solvep1(parsed):
             return score + pressure * (maxtime - t), isopen
         return bestmovescore
 
-    score, isopen = recurse(0, "AA", tuple())
-    print(score, isopen)
+    return recurse(0, "AA", initialopen)
 
-    return score
+
+def solvep1(parsed):
+    rates = {n: rate for n, rate, nbs in parsed}
+    return solve(compact(parsed), 30, rates, tuple())
 
 
 def solvep2(parsed):
-    edges = compact(parsed)
     rates = {n: rate for n, rate, nbs in parsed}
-    maxtime = 26
+    edges = compact(parsed)
 
-    cache = {}
+    valves = [e for e in edges if e != "AA"]
+    opencombos = chain.from_iterable(
+        [combinations(valves, l) for l in range(1, len(valves))]
+    )
 
-    def recurse(t1, t2, c1, c2, o1, o2):
-        cachekey = (t1, t2, c1, c2, o1, o2)
-        if cachekey not in cache:
-            # print(t1, t2, c1, c2, o1, o2)
-            p1, p2 = sum(rates[o] for o in o1), sum(rates[o] for o in o2)
-            p1_, p2_ = p1 + rates[c1], p2 + rates[c2]
+    best = 0
+    i = 0
+    t0 = t = time.process_time()
+    for combo in opencombos:
+        p1score, p1used = solve(
+            {k: v for k, v in edges.items() if k == "AA" or k in combo},
+            26,
+            rates,
+            tuple(),
+        )
+        p2score, p2used = solve(
+            {k: v for k, v in edges.items() if k == "AA" or k not in combo},
+            26,
+            rates,
+            tuple(),
+        )
+        best = max(best, p1score + p2score)
 
-            # t time for opening valve
-            dt1 = 1 if rates[c1] > 0 else 0
-            dt2 = 1 if rates[c2] > 0 else 0
+        i += 1
+        if i % 100 == 0:
+            t_ = time.process_time()
+            print(i, 100 // (t_ - t), "tps", i // (t_ - t0), "tpstot")
+            t = t_
 
-            movescores = []
-            for nb, cost in edges[c1].items():
-                if nb in o1 + o2 or nb == c2:
-                    continue
-                if t1 + dt1 + cost <= maxtime:
-                    movescores.append(
-                        p1
-                        + p1_ * cost
-                        + recurse(
-                            t1 + dt1 + cost, t2, nb, c2, tuple(sorted(o1 + (c1,))), o2
-                        )
-                    )
-
-            for nb, cost in edges[c2].items():
-                if nb in o1 + o2 or nb == c1:
-                    continue
-                if t2 + dt2 + cost <= maxtime:
-                    movescores.append(
-                        p2
-                        + p2_ * cost
-                        + recurse(
-                            t1, t2 + dt2 + cost, c1, nb, o1, tuple(sorted(o2 + (c2,)))
-                        )
-                    )
-
-            if not movescores:
-                cache[cachekey] = (
-                    p1 + p1_ * (maxtime - t1 - dt1) + p2 + p2_ * (maxtime - t2 - dt2)
-                )
-            else:
-                cache[cachekey] = max(movescores)
-
-            if len(cache) % 100000 == 0:
-                print(len(cache))
-
-        return cache[cachekey]
-
-    score = recurse(0, 0, "AA", "AA", tuple(), tuple())
-
-    return score
+    return best
 
 
 def parse(input_: str):
@@ -155,7 +134,7 @@ Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II
 """
     parsed = parse(input_)
-    assert solvep1(parsed) == 1651
+    assert solvep1(parsed)[0] == 1651
     assert solvep2(parsed) == 1707
 
 
