@@ -1,29 +1,129 @@
-from functools import cache
+from collections import defaultdict, deque
+from functools import lru_cache
+from math import inf
 from pathlib import Path
 
 DAY = 16
 full_input_ = Path(f"{DAY}.txt").read_text()
 
-def solve(parsed):
-    rates={p[0]:p[1] for p in parsed}
-    nbs = {p[0]:p[2] for p in parsed}
 
-    @cache
+def compact(parsed):
+    N = {n for n, rate, nbs in parsed if rate > 0}
+    nbs = {n: nbs for n, rate, nbs in parsed}
+
+    edges = defaultdict(dict)
+
+    for n in N | {"AA"}:
+        Q = deque([(n, 0)])
+        visited = set()
+        while Q:
+            current, dist = Q.popleft()
+            visited.add(current)
+            if current != n and current in N:
+                edges[n][current] = dist
+            for nb in nbs[current]:
+                if nb not in visited:
+                    Q.append((nb, dist + 1))
+    return edges
+
+
+def solvep1(parsed):
+    edges = compact(parsed)
+    rates = {n: rate for n, rate, nbs in parsed}
+    maxdepth = inf
+    maxtime = 30
+
+    @lru_cache(maxsize=None)
     def recurse(t, current, isopen):
-        released = sum(rates[o] for o in isopen)
+        if maxdepth == len(isopen):
+            return 0, isopen
 
-        if t == 30:
-            return released
+        score = sum(rates[o] for o in isopen)
+        if rates[current] > 0:
+            # spend one sec opening valve
+            isopen = tuple(sorted(isopen + (current,)))
+            t += 1
+        pressure = sum(rates[o] for o in isopen)
 
-        openscore = 0
-        if current not in isopen and rates[current] > 0:
-            openscore = recurse(t + 1, current, tuple(sorted(isopen + (current,))))
+        bestmovescore = 0, isopen
+        for nb, cost in edges[current].items():
+            if nb in isopen:
+                continue
+            assert nb != "AA"
+            if t + cost <= maxtime:
+                recurse_score, isopen_ = recurse(t + cost, nb, isopen)
+                movescore = score + pressure * cost + recurse_score
+                if movescore > bestmovescore[0]:
+                    bestmovescore = movescore, isopen_
 
-        movescore = max(recurse(t + 1, nb, isopen) for nb in nbs[current])
+        if bestmovescore[0] == 0:
+            return score + pressure * (maxtime - t), isopen
+        return bestmovescore
 
-        return released + max(openscore, movescore)
+    score, isopen = recurse(0, "AA", tuple())
+    print(score, isopen)
 
-    return recurse(1, parsed[0][0], tuple())
+    return score
+
+
+def solvep2(parsed):
+    edges = compact(parsed)
+    rates = {n: rate for n, rate, nbs in parsed}
+    maxtime = 26
+
+    cache = {}
+
+    def recurse(t1, t2, c1, c2, o1, o2):
+        cachekey = (t1, t2, c1, c2, o1, o2)
+        if cachekey not in cache:
+            # print(t1, t2, c1, c2, o1, o2)
+            p1, p2 = sum(rates[o] for o in o1), sum(rates[o] for o in o2)
+            p1_, p2_ = p1 + rates[c1], p2 + rates[c2]
+
+            # t time for opening valve
+            dt1 = 1 if rates[c1] > 0 else 0
+            dt2 = 1 if rates[c2] > 0 else 0
+
+            movescores = []
+            for nb, cost in edges[c1].items():
+                if nb in o1 + o2 or nb == c2:
+                    continue
+                if t1 + dt1 + cost <= maxtime:
+                    movescores.append(
+                        p1
+                        + p1_ * cost
+                        + recurse(
+                            t1 + dt1 + cost, t2, nb, c2, tuple(sorted(o1 + (c1,))), o2
+                        )
+                    )
+
+            for nb, cost in edges[c2].items():
+                if nb in o1 + o2 or nb == c1:
+                    continue
+                if t2 + dt2 + cost <= maxtime:
+                    movescores.append(
+                        p2
+                        + p2_ * cost
+                        + recurse(
+                            t1, t2 + dt2 + cost, c1, nb, o1, tuple(sorted(o2 + (c2,)))
+                        )
+                    )
+
+            if not movescores:
+                cache[cachekey] = (
+                    p1 + p1_ * (maxtime - t1 - dt1) + p2 + p2_ * (maxtime - t2 - dt2)
+                )
+            else:
+                cache[cachekey] = max(movescores)
+
+            if len(cache) % 100000 == 0:
+                print(len(cache))
+
+        return cache[cachekey]
+
+    score = recurse(0, 0, "AA", "AA", tuple(), tuple())
+
+    return score
 
 
 def parse(input_: str):
@@ -55,25 +155,16 @@ Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II
 """
     parsed = parse(input_)
-    assert solve(parsed) == 1651
-
-
-def testcustom():
-    # input_=Path(f"{DAY}ex.txt").read_text()
-    input_ = """\
-Valve AA has flow rate=0; tunnels lead to valves BB,CC
-Valve BB has flow rate=0; tunnels lead to valves CC, DD, AA
-Valve CC has flow rate=2; tunnels lead to valves CC
-Valve DD has flow rate=2; tunnels lead to valves DD
-"""
-    parsed = parse(input_)
-    assert solve(parsed) == 28 * 2
-
+    assert solvep1(parsed) == 1651
+    assert solvep2(parsed) == 1707
 
 
 def run():
     parsed = parse(full_input_)
-    result = solve(parsed)
+    result = solvep1(parsed)
+    print(result)
+
+    result = solvep2(parsed)
     print(result)
 
 
