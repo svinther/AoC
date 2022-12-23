@@ -49,19 +49,18 @@ def solve(E, maxrounds):
         for e in E:
             # If no other Elves are in one of those eight positions, the Elf does not do anything during this round
             clear = True
-            for checkmods, __ in nextp:
+            # look for move
+            move = None
+            for checkmods, movemod in nextp:
                 if scan(E, e, checkmods):
                     clear = False
-                    break
+                elif move is None:
+                    move = tuple(a + b for a, b in zip(movemod, e))
+
             if clear:
                 continue
-
-            # look for move
-            for checkmods, movemod in nextp:
-                if not scan(E, e, checkmods):
-                    move = tuple(a + b for a, b in zip(movemod, e))
-                    moves[move].append(e)
-                    break
+            if move:
+                moves[move].append(e)
 
         if not moves:
             break
