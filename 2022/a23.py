@@ -100,20 +100,6 @@ def parse(input_: str):
     return parsed
 
 
-def testsmall():
-    print()
-    input_ = """\
-.....
-..##.
-..#..
-.....
-..##.
-.....
-    """
-    parsed = parse(input_)
-    solve(parsed, 10)
-
-
 def testp1p2():
     print()
     # input_=Path(f"{DAY}ex.txt").read_text()
@@ -127,9 +113,9 @@ def testp1p2():
 .#..#..
 """
     parsed = parse(input_)
-    assert solve(parsed, 10)[0] == 110
+    assert solve(copy(parsed), 10)[0] == 110
 
-    assert solve(parsed, int(1e100))[1] == 20
+    assert solve(copy(parsed), int(1e100))[1] == 20
 
 
 def run():
