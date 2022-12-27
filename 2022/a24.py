@@ -1,6 +1,9 @@
+import heapq
+import itertools
 from collections import defaultdict
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Any
 
 DAY = 24
 full_input_ = Path(f"{DAY}.txt").read_text()
@@ -66,20 +69,56 @@ def get_cycles(
     return cycles, xmax, ymax
 
 
+@dataclass(order=True)
+class Prioritized:
+    cost: int
+    state: Any = field(compare=False)
+    path: Any = field(compare=False)
+
+
 def solve(parsed: Tuple[Dict[Tuple[int, int], str], int, int], startpath, target):
     cycles, xmax, ymax = get_cycles(parsed)
 
+    REMOVED = "REMOVED"
+    ENTRIES = {}
+    counter = itertools.count()
+    Q = []
+
+    def pushq(item: Prioritized):
+        key = (item.cost, item.state)
+        if key in ENTRIES:
+            remq(item.cost, item.state)
+        entry = [item.cost, next(counter), item]
+        ENTRIES[key] = entry
+        heapq.heappush(Q, entry)
+
+    def popq():
+        while Q:
+            cost, count, item = heapq.heappop(Q)
+            if item is not REMOVED:
+                key = (item.cost, item.state)
+                del ENTRIES[key]
+                return item
+
+    def remq(cost, state):
+        key = (cost, state)
+        entry = ENTRIES.pop(key)
+        item = entry[-1]
+        entry[-1] = REMOVED
+        return item
+
     initial_state = ((len(startpath) - 1) % len(cycles), startpath[-1])
     # (cycle, current, xypath)
-    Q = [(initial_state, startpath)]
+    pushq(Prioritized(0, initial_state, startpath))
 
     # state is tuple of (cycle, pos)
     # entry in costs indicate that the state is either in Q or was previously visited
     costs = {initial_state: 0}
 
     while Q:
-        Q.sort(key=lambda z: costs[(z[0])], reverse=True)
-        (c, current), path = Q.pop()
+        p = popq()
+        (c, current) = p.state
+        path = p.path
 
         if current == target:
             return path
@@ -99,15 +138,12 @@ def solve(parsed: Tuple[Dict[Tuple[int, int], str], int, int], startpath, target
                 if previous_cost:
                     if cost < previous_cost:
                         # found cheaper path to this state
-                        costs[state] = cost
-                    continue
-                else:
-                    costs[state] = cost
+                        remq(previous_cost, state)
+                    else:
+                        continue
 
-                if len(costs) % 50000 == 0:
-                    print(len(costs), len(Q))
-
-                Q.append(((cyclep, (x_, y_)), path + [(x_, y_)]))
+                costs[state] = cost
+                pushq(Prioritized(cost, state, path + [(x_, y_)]))
 
     assert False
 
