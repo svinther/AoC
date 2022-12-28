@@ -1,40 +1,12 @@
-import heapq
-import itertools
-from collections import defaultdict
-from dataclasses import dataclass, field
+from collections import defaultdict, deque
 from pathlib import Path
-from typing import Tuple, Dict, List, Any
+from typing import Tuple, Dict, List
 
 DAY = 24
 full_input_ = Path(f"{DAY}.txt").read_text()
 
 
-def render_single(xmax, ymax, B, current=None):
-    for y in range(-1, ymax + 2):
-        for x in range(-1, xmax + 2):
-            if current and (x, y) == current:
-                print("E", end="")
-            elif (x, y) in B:
-                lc = B[(x, y)]
-                if len(lc) > 1:
-                    print(len(lc), end="")
-                else:
-                    print(lc[0], end="")
-            else:
-                print("#" if y < 0 or y > ymax or x < 0 or x > xmax else ".", end="")
-        print()
-
-
-def render(xmax, ymax, cycles, path):
-    for cycle, current in enumerate(path):
-        print(cycle)
-        render_single(xmax, ymax, cycles[cycle % len(cycles)])
-        render_single(xmax, ymax, cycles[cycle % len(cycles)], current)
-
-
-def get_cycles(
-    parsed: Tuple[Dict[Tuple[int, int], str], int, int]
-) -> Tuple[List[Dict[Tuple[int, int], List[str]]], int, int]:
+def get_cycles(parsed) -> Tuple[List[Dict[Tuple[int, int], List[str]]], int, int]:
     """Return a tuple with 3 entries, being:
     1. a list of dicts with key (x,y) --> List of blizzard directions for (x,y)
     2. xmax
@@ -69,63 +41,23 @@ def get_cycles(
     return cycles, xmax, ymax
 
 
-@dataclass(order=True)
-class Prioritized:
-    cost: int
-    state: Any = field(compare=False)
-    path: Any = field(compare=False)
-
-
-def solve(parsed: Tuple[Dict[Tuple[int, int], str], int, int], startpath, target):
-    cycles, xmax, ymax = get_cycles(parsed)
-
-    REMOVED = "REMOVED"
-    ENTRIES = {}
-    counter = itertools.count()
-    Q = []
-
-    def pushq(item: Prioritized):
-        key = (item.cost, item.state)
-        if key in ENTRIES:
-            remq(item.cost, item.state)
-        entry = [item.cost, next(counter), item]
-        ENTRIES[key] = entry
-        heapq.heappush(Q, entry)
-
-    def popq():
-        while Q:
-            cost, count, item = heapq.heappop(Q)
-            if item is not REMOVED:
-                key = (item.cost, item.state)
-                del ENTRIES[key]
-                return item
-
-    def remq(cost, state):
-        key = (cost, state)
-        entry = ENTRIES.pop(key)
-        item = entry[-1]
-        entry[-1] = REMOVED
-        return item
-
-    initial_state = ((len(startpath) - 1) % len(cycles), startpath[-1])
-    # (cycle, current, xypath)
-    pushq(Prioritized(0, initial_state, startpath))
-
-    # state is tuple of (cycle, pos)
-    # entry in costs indicate that the state is either in Q or was previously visited
-    costs = {initial_state: 0}
+def solve(cycles, xmax, ymax, startcycle, start, target):
+    initial_state = (startcycle, start)
+    Q = deque([initial_state])
+    SEEN = set()
 
     while Q:
-        p = popq()
-        (c, current) = p.state
-        path = p.path
+        c, current = Q.popleft()
+        if (c, current) in SEEN:
+            continue
+        SEEN.add((c, current))
 
         if current == target:
-            return path
+            return c
 
-        cyclep = len(path) % len(cycles)
+        cyclep = c + 1
 
-        B = cycles[cyclep]
+        B = cycles[cyclep % len(cycles)]
         cx, cy = current
         for x_, y_ in [current, (cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)]:
             if (x_, y_) in B:
@@ -133,39 +65,17 @@ def solve(parsed: Tuple[Dict[Tuple[int, int], str], int, int], startpath, target
 
             if (x_, y_) in (current, target) or (0 <= x_ <= xmax and 0 <= y_ <= ymax):
                 state = (cyclep, (x_, y_))
-                cost = len(path)
-                previous_cost = costs.get(state)
-                if previous_cost:
-                    if cost < previous_cost:
-                        # found cheaper path to this state
-                        remq(previous_cost, state)
-                    else:
-                        continue
-
-                costs[state] = cost
-                pushq(Prioritized(cost, state, path + [(x_, y_)]))
+                Q.append(state)
 
     assert False
 
 
-def solvep1(parsed):
-    _, xmax, ymax = parsed
-    path = solve(parsed, [(0, -1)], (xmax, ymax + 1))
-    return len(path) - 1
-
-
-def solvep2(parsed: Tuple[Dict[Tuple[int, int], str], int, int]):
-    _, xmax, ymax = parsed
-    path1 = solve(parsed, [(0, -1)], (xmax, ymax + 1))
-    assert path1[-1] == (xmax, ymax + 1)
-
-    path2 = solve(parsed, path1, (0, -1))
-    assert path2[-1] == (0, -1)
-
-    path3 = solve(parsed, path2, (xmax, ymax + 1))
-    assert path3[-1] == (xmax, ymax + 1)
-
-    return len(path3) - 1
+def solvep1p2(parsed):
+    cycles, xmax, ymax = get_cycles(parsed)
+    l1 = solve(cycles, xmax, ymax, 0, (0, -1), (xmax, ymax + 1))
+    l2 = solve(cycles, xmax, ymax, l1, (xmax, ymax + 1), (0, -1))
+    l3 = solve(cycles, xmax, ymax, l2, (0, -1), (xmax, ymax + 1))
+    return l1, l3
 
 
 def parse(input_: str):
@@ -194,14 +104,15 @@ def testp1p2():
 ######.#
 """
     parsed = parse(input_)
-    assert solvep1(parsed) == 18
-    assert solvep2(parsed) == 54
+    assert solvep1p2(parsed)[0] == 18
+    assert solvep1p2(parsed)[1] == 54
 
 
 def run():
     parsed = parse(full_input_)
-    print(solvep1(parsed))
-    print(solvep2(parsed))
+    p1, p2 = solvep1p2(parsed)
+    print(p1)
+    print(p2)
 
 
 if __name__ == "__main__":
