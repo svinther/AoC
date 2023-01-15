@@ -1,6 +1,5 @@
 from collections import defaultdict
 from functools import reduce
-from itertools import product
 from operator import mul
 from pathlib import Path
 
@@ -8,14 +7,17 @@ DAY = "15"
 full_input_ = Path(f"{DAY}.txt").read_text()
 
 
+def combos():
+    for a in range(101):
+        for b in range(100 - a + 1):
+            for c in range(100 - a - b + 1):
+                yield (a, b, c, 100 - a - b - c)
+
+
 def solve(ingredients):
     bestcombo, bestscore = None, 0
     p2bestcombo, p2bestscore = None, 0
-    for combo in [
-        c
-        for c in product(range(101), range(101), range(101), range(101))
-        if sum(c) == 100
-    ]:
+    for combo in combos():
         iscores = defaultdict(int)
         for idx, amount in enumerate(combo):
             for prop, val in ingredients[idx].items():
