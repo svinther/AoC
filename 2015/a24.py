@@ -1,5 +1,3 @@
-from functools import lru_cache, reduce
-from operator import mul
 
 P = [
     1,
