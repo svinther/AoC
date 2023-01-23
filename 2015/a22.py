@@ -28,8 +28,8 @@ P = [
 
 # turn, effects (3xint), boss, player, mana, spent
 @lru_cache(maxsize=None)
-def solve(t, A, b, p, m, s):
-    if t % 2 == 0 and difficulty == "hard":
+def solve(pt, A, b, p, m, s):
+    if pt and difficulty == "hard":
         p -= 1
 
     if p <= 0:
@@ -45,35 +45,35 @@ def solve(t, A, b, p, m, s):
             armor += e.armor
     A = tuple(max(0, a - 1) for a in A)
 
-    if t % 2 == 0:
+    if pt:
         scores = []
 
         # Magic Missile
         if m >= 53:
-            scores.append(solve(t + 1, A, b - 4, p, m - 53, s + 53))
+            scores.append(solve(False, A, b - 4, p, m - 53, s + 53))
         # Drain
         if m >= 73:
-            scores.append(solve(t + 1, A, b - 2, p + 2, m - 73, s + 73))
+            scores.append(solve(False, A, b - 2, p + 2, m - 73, s + 73))
 
         # Shield, Poison, Recharge
         for i, e in enumerate(P):
             if m >= e.manacost and A[i] <= 0:
                 A_ = tuple(A[j] if j != i else e.turns for j in range(len(A)))
-                scores.append(solve(t + 1, A_, b, p, m - e.manacost, s + e.manacost))
+                scores.append(solve(False, A_, b, p, m - e.manacost, s + e.manacost))
 
         if not scores:
             # do nothing
-            scores.append(solve(t + 1, A, b, p, m, s))
+            scores.append(solve(False, A, b, p, m, s))
 
         return min(scores)
     else:
-        return solve(t + 1, A, b, p - max(1, boss_damage - armor), m, s)
+        return solve(True, A, b, p - max(1, boss_damage - armor), m, s)
 
 
 difficulty = "easy"
-result = solve(0, (0, 0, 0), boss, player, mana, 0)
+result = solve(True, (0, 0, 0), boss, player, mana, 0)
 print(result, difficulty)
 solve.cache_clear()
 difficulty = "hard"
-result = solve(0, (0, 0, 0), boss, player, mana, 0)
+result = solve(True, (0, 0, 0), boss, player, mana, 0)
 print(result, difficulty)
