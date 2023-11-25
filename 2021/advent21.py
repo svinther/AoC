@@ -2,6 +2,7 @@ import sys
 from functools import cache
 from itertools import product
 
+
 # inspired/stolen from https://www.youtube.com/watch?v=a6ZdJEntKkk&ab_channel=JonathanPaulson
 @cache
 def paths21(p1, p2, s1, s2):

@@ -91,7 +91,6 @@ def print_result(counts):
 
 
 for num, data in enumerate(inputs, start=1):
-
     S = []
     M = {}
 

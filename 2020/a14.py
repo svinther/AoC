@@ -4,22 +4,24 @@ from collections import deque
 DAY = "14"
 full_input_ = Path(f"{DAY}.txt").read_text()
 
+
 def combos(m):
-    Q=deque([(0, [])])
+    Q = deque([(0, [])])
     while Q:
         i, s = Q.popleft()
-        if i==36:
+        if i == 36:
             yield "".join(s)
             continue
         if m[i] == "X":
-            s1=s.copy()
+            s1 = s.copy()
             s.append("X")
-            Q.append((i+1, s))
+            Q.append((i + 1, s))
             s1.append("x")
-            Q.append((i+1, s1))
+            Q.append((i + 1, s1))
         else:
             s.append(m[i])
-            Q.append((i+1, s))
+            Q.append((i + 1, s))
+
 
 def solve(parsed):
     mem = {}
@@ -36,9 +38,10 @@ def solve(parsed):
                 mem[addr] = num
     return sum(mem.values())
 
+
 def parse(input_: str):
     parsed = []
-    cur=None
+    cur = None
     for l in input_.split("\n"):
         l = l.strip()
         if not l:
@@ -47,7 +50,7 @@ def parse(input_: str):
         if left == "mask":
             if cur:
                 parsed.append(cur)
-            cur=[right]
+            cur = [right]
         else:
             cur.append((int(left[4:-1]), int(right)))
     parsed.append(cur)
