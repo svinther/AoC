@@ -47,7 +47,6 @@ def adjecants(m, p, used):
 
 
 for num, data in enumerate(inputs, start=1):
-
     MAP_ = []
     for line in data.split("\n"):
         line = line.strip()
@@ -60,7 +59,6 @@ for num, data in enumerate(inputs, start=1):
     MAP = [[-1 for _ in range(5 * H)] for _ in range(5 * H)]
     for y in range(5 * H):
         for x in range(5 * H):
-
             # Where to copy from, first tile is only in original map
             if x // H == 0 and y // H == 0:
                 MAP[y][x] = MAP_[y][x]

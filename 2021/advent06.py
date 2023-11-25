@@ -12,7 +12,6 @@ with open(f"input.{year}.{day}.txt", "r") as iopen:
 
 
 for num, data in enumerate(inputs, start=1):
-
     A = defaultdict(int)
     for a in data.split(","):
         A[int(a)] += 1

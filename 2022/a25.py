@@ -4,6 +4,7 @@ from typing import List
 DAY = 25
 full_input_ = Path(f"{DAY}.txt").read_text()
 
+
 def numberToBase(n: int, b: int) -> List[int]:
     if n == 0:
         return [0]
