@@ -23,7 +23,7 @@ def solve(parsed):
 
 def parse(input_: str):
     parsed = []
-    for l in getinput().split("\n"):
+    for l in input_.split("\n"):
         l = l.strip()
         if not l:
             continue
