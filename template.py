@@ -1,7 +1,20 @@
 from pathlib import Path
+import requests
 
-DAY = "x"
-full_input_ = Path(f"{DAY}.txt").read_text()
+YEAR = "yyyy"
+DAY = "dd"
+
+
+def getinput():
+    path = Path(f"{DAY}.txt")
+    if not path.exists():
+        sessionid = Path(".secret").read_text().strip()
+        res = requests.get(
+            f"https://adventofcode.com/{YEAR}/day/{DAY}/input",
+            cookies={"session": sessionid},
+        )
+        path.write_text(res.text)
+    return path.read_text()
 
 
 def solve(parsed):
@@ -10,7 +23,7 @@ def solve(parsed):
 
 def parse(input_: str):
     parsed = []
-    for l in input_.split("\n"):
+    for l in getinput().split("\n"):
         l = l.strip()
         if not l:
             continue
@@ -28,7 +41,7 @@ def testp1p2():
 
 
 def run():
-    parsed = parse(full_input_)
+    parsed = parse(getinput())
     result = solve(parsed)
     print(result)
 
