@@ -19,26 +19,27 @@ def getinput():
 
 
 def solve(parsed):
-    #12 red cubes, 13 green cubes, and 14 blue cubes
+    # 12 red cubes, 13 green cubes, and 14 blue cubes
     limits = {"red": 12, "green": 13, "blue": 14}
-    p1=0
-    p2=[]
+    p1 = 0
+    p2 = []
     for i, g in enumerate(parsed):
-        p2i=defaultdict(int)
+        p2i = defaultdict(int)
         p2.append(p2i)
 
-        OK=True
+        OK = True
         for s in g:
             for t, n in s.items():
                 if n > limits.get(t, 0):
-                    OK=False
+                    OK = False
                 p2i[t] = max(p2i[t], n)
         if OK:
-            p1+=i+1
+            p1 += i + 1
 
-    powers =[ p2i["red"] * p2i["blue"] * p2i["green"] for p2i in p2]
+    powers = [p2i["red"] * p2i["blue"] * p2i["green"] for p2i in p2]
 
     return p1, sum(powers)
+
 
 def parse(input_: str):
     parsed = []
@@ -47,14 +48,14 @@ def parse(input_: str):
         if not l:
             continue
         left, right = l.split(": ")
-        sets=right.split("; ")
-        g=[]
+        sets = right.split("; ")
+        g = []
         for s in sets:
             cubes = s.split(", ")
             s = {}
             for c in cubes:
                 n, t = c.split(" ")
-                s[t]=int(n)
+                s[t] = int(n)
             g.append(s)
         parsed.append(g)
     return parsed
@@ -71,8 +72,6 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
 """
     parsed = parse(input_)
     assert solve(parsed) == (8, 2286)
-
-
 
 
 def run():
