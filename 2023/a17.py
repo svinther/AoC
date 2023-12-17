@@ -1,5 +1,7 @@
 from heapq import heappush, heappop
+from math import inf
 from pathlib import Path
+
 import requests
 
 YEAR = "2023"
@@ -18,24 +20,18 @@ def getinput():
     return path.read_text()
 
 
-def render(G, X, Y, path):
-    for y in range(Y):
-        for x in range(X):
-            if (x, y) in path:
-                print(path[(x, y)], end="")
-            else:
-                print(G[(x, y)], end="")
-        print()
-
-
 def solve(parsed, maxmoves=3, minmoves=0):
     G, X, Y = parsed
     Q = []  # cost, x,y,nummoves, direction
-    heappush(Q, (0, 0, 0, 0, "o", {}))
+    heappush(Q, (0, 0, 0, 0, "o"))
     SEEN = set()
+    COST = {}
+
     while Q:
-        c, x, y, m, d, path = heappop(Q)
-        # render(G, X, Y, path)
+        c, x, y, m, d = heappop(Q)
+        if c > COST.get((x, y, m, d), inf):
+            continue
+
         possibles = []
         # left ?
         if x > 0:
@@ -63,14 +59,18 @@ def solve(parsed, maxmoves=3, minmoves=0):
                 possibles.append((x, y + 1, "v", m + 1))
 
         for dx, dy, dd, dm in possibles:
+            if (dx, dy, dd, dm) in SEEN:
+                continue
+
             dc = c + G[(dx, dy)]
             if dx == X - 1 and dy == Y - 1 and dm >= minmoves:
                 return dc
 
-            P = (dx, dy, dm, dd)
-            if P not in SEEN:
-                SEEN.add(P)
-                heappush(Q, (dc, dx, dy, dm, dd, path | {(dx, dy): dd}))
+            if dc < COST.get((dx, dy, dm, dd), inf):
+                COST[(dx, dy, dm, dd)] = dc
+                heappush(Q, (dc, dx, dy, dm, dd))
+
+        SEEN.add((x, y, m, d))
 
 
 def parse(input_: str):
