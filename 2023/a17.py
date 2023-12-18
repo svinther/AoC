@@ -1,5 +1,4 @@
 from heapq import heappush, heappop
-from math import inf
 from pathlib import Path
 
 import requests
@@ -25,51 +24,49 @@ def solve(parsed, maxmoves=3, minmoves=0):
     Q = []  # cost, x,y,nummoves, direction
     heappush(Q, (0, 0, 0, 0, "o"))
     SEEN = set()
-    COST = {}
+    ENQ = set()
 
     while Q:
         c, x, y, m, d = heappop(Q)
-        if c > COST.get((x, y, m, d), inf):
-            continue
 
         possibles = []
         # left ?
         if x > 0:
             if d in "^v" and m >= minmoves:
-                possibles.append((x - 1, y, "<", 1))
+                possibles.append((x - 1, y, 1, "<"))
             elif d == "<" and m < maxmoves:
-                possibles.append((x - 1, y, "<", m + 1))
+                possibles.append((x - 1, y, m + 1, "<"))
         # right ?
         if x < X - 1:
             if d == "o" or (d in "^v" and m >= minmoves):
-                possibles.append((x + 1, y, ">", 1))
+                possibles.append((x + 1, y, 1, ">"))
             elif d == ">" and m < maxmoves:
-                possibles.append((x + 1, y, ">", m + 1))
+                possibles.append((x + 1, y, m + 1, ">"))
         # up ?
         if y > 0:
             if d in "<>" and m >= minmoves:
-                possibles.append((x, y - 1, "^", 1))
+                possibles.append((x, y - 1, 1, "^"))
             elif d == "^" and m < maxmoves:
-                possibles.append((x, y - 1, "^", m + 1))
+                possibles.append((x, y - 1, m + 1, "^"))
         # down ?
         if y < Y - 1:
             if d == "o" or (d in "<>" and m >= minmoves):
-                possibles.append((x, y + 1, "v", 1))
+                possibles.append((x, y + 1, 1, "v"))
             elif d == "v" and m < maxmoves:
-                possibles.append((x, y + 1, "v", m + 1))
+                possibles.append((x, y + 1, m + 1, "v"))
 
-        for dx, dy, dd, dm in possibles:
-            if (dx, dy, dd, dm) in SEEN:
+        for P in possibles:
+            if P in SEEN:
                 continue
-
+            dx, dy, dm, dd = P
             dc = c + G[(dx, dy)]
             if dx == X - 1 and dy == Y - 1 and dm >= minmoves:
                 return dc
 
-            if dc < COST.get((dx, dy, dm, dd), inf):
-                COST[(dx, dy, dm, dd)] = dc
-                heappush(Q, (dc, dx, dy, dm, dd))
-
+            if P in ENQ:
+                continue
+            ENQ.add(P)
+            heappush(Q, (dc, *P))
         SEEN.add((x, y, m, d))
 
 
