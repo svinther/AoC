@@ -25,7 +25,7 @@ def solvep1(parsed):
     pass
 
 
-def solvep2():
+def solvep2(parsed):
     pass
 
 
@@ -45,7 +45,7 @@ def testp1p2():
 
 """
     parsed = parse(input_)
-    # assert solve(parsed) == 42
+    # assert solvep1(parsed) == 42
 
 
 def run():
