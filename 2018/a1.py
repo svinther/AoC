@@ -5,8 +5,8 @@ from itertools import *
 from heapq import *
 from collections import *
 
-YEAR = "yyyy"
-DAY = "dd"
+YEAR = "2018"
+DAY = "1"
 
 
 def getinput():
@@ -21,12 +21,15 @@ def getinput():
     return path.read_text()
 
 
-def solvep1(parsed):
-    pass
-
-
-def solvep2():
-    pass
+def solve(parsed):
+    seen = set()
+    freq = 0
+    while True:
+        for p in parsed:
+            freq += p
+            if freq in seen:
+                return freq
+            seen.add(freq)
 
 
 def parse(input_: str):
@@ -35,7 +38,7 @@ def parse(input_: str):
         l = l.strip()
         if not l:
             continue
-        parsed.append(l)
+        parsed.append(int(l))
     return parsed
 
 
@@ -50,10 +53,8 @@ def testp1p2():
 
 def run():
     parsed = parse(getinput())
-    p1result = solvep1(parsed)
-    print(p1result)
-    p2result = solvep2(parsed)
-    print(p2result)
+    result = solve(parsed)
+    print(result)
 
 
 if __name__ == "__main__":

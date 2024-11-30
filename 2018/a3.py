@@ -5,8 +5,8 @@ from itertools import *
 from heapq import *
 from collections import *
 
-YEAR = "yyyy"
-DAY = "dd"
+YEAR = "2018"
+DAY = "3"
 
 
 def getinput():
@@ -22,10 +22,25 @@ def getinput():
 
 
 def solvep1(parsed):
-    pass
+    claimed = defaultdict(list)
+    conflicts = set()
+
+    for claim, (c, r), (n, m) in parsed:
+        for i in range(n):
+            for j in range(m):
+                if claimed[(c + i, r + j)]:
+                    for cclaim in claimed[(c + i, r + j)]:
+                        conflicts.add(cclaim)
+                    conflicts.add(claim)
+                claimed[(c + i, r + j)].append(claim)
+
+    allclaims = {claim for claim, *_ in parsed}
+    answer = allclaims - conflicts
+    assert len(answer) == 1
+    return answer.pop()
 
 
-def solvep2():
+def solvep2(parsed):
     pass
 
 
@@ -35,17 +50,24 @@ def parse(input_: str):
         l = l.strip()
         if not l:
             continue
-        parsed.append(l)
+        claim, _, start, size = l.split()
+        claim = claim.strip("#")
+        start = start.strip(":")
+        start = tuple(map(int, start.split(",")))
+        size = tuple(map(int, size.split("x")))
+        parsed.append((claim, start, size))
     return parsed
 
 
 def testp1p2():
     # input_=Path(f"{DAY}ex.txt").read_text()
     input_ = """\
-
+#1 @ 1,3: 4x4
+#2 @ 3,1: 4x4
+#3 @ 5,5: 2x2
 """
     parsed = parse(input_)
-    # assert solve(parsed) == 42
+    assert solvep1(parsed) == 4
 
 
 def run():
