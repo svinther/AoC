@@ -22,7 +22,7 @@ def getinput():
     return path.read_text()
 
 
-def solvep1(G):
+def solvep1_(G):
     C, R = len(G), len(G[0])
     for c in range(C):
         for r in range(R):
@@ -47,22 +47,26 @@ def solvep1(G):
             dr, dc = dirs[0]
         r, c = r + dr, c + dc
         if (r, c, (dr, dc)) in seen:
-            return -1
+            return -1, set()
         seen.add((r, c, (dr, dc)))
 
+    return steps, counted
+
+
+def solvep1(G):
+    steps, _ = solvep1_(G)
     return steps
 
 
 def solvep2(G):
-    C, R = len(G), len(G[0])
     answer = 0
-    for c in range(C):
-        for r in range(R):
-            if G[r][c] == ".":
-                G[r][c] = "#"
-                if solvep1(G) == -1:
-                    answer += 1
-                G[r][c] = "."
+    _, obstacle_spots = solvep1_(G)
+    for r, c in obstacle_spots:
+        if G[r][c] == ".":
+            G[r][c] = "#"
+            if solvep1(G) == -1:
+                answer += 1
+            G[r][c] = "."
     return answer
 
 
@@ -92,6 +96,7 @@ def testp1p2():
 """
     parsed = parse(input_)
     assert solvep1(parsed) == 41
+    assert solvep2(parsed) == 6
 
 
 def run():
