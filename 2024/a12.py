@@ -98,6 +98,8 @@ def solvep2(G):
                             right = (xr, xc + 1, d)
                             if left not in pseen and right not in pseen:
                                 p += 1
+                            elif left in pseen and right in pseen:
+                                p -= 1
 
                             pseen.add((xr, xc, d))
                         else:
@@ -105,6 +107,9 @@ def solvep2(G):
                             below = (xr + 1, xc, d)
                             if above not in pseen and below not in pseen:
                                 p += 1
+                            elif above in pseen and below in pseen:
+                                p -= 1
+
                             pseen.add((xr, xc, d))
 
             gardens[t].append((a, p))
