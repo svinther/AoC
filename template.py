@@ -1,24 +1,6 @@
-from pathlib import Path
-import requests
-
 from itertools import *
 from heapq import *
 from collections import *
-
-YEAR = "yyyy"
-DAY = "dd"
-
-
-def getinput():
-    path = Path(f"{DAY}.txt")
-    if not path.exists():
-        sessionid = Path(".secret").read_text().strip()
-        res = requests.get(
-            f"https://adventofcode.com/{YEAR}/day/{DAY}/input",
-            cookies={"session": sessionid},
-        )
-        path.write_text(res.text)
-    return path.read_text()
 
 
 def solvep1(parsed):
@@ -49,9 +31,12 @@ def testp1p2():
 
 
 def run():
-    parsed = parse(getinput())
+    input_ = open(0).read()
+    parsed = parse(input_)
     p1result = solvep1(parsed)
     print(p1result)
+
+    parsed = parse(input_)
     p2result = solvep2(parsed)
     print(p2result)
 
