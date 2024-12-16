@@ -1,6 +1,11 @@
+import re
 from itertools import *
 from heapq import *
 from collections import *
+
+
+def ints(line):
+    return list(map(int, re.findall(r"-?\d+", line)))
 
 
 def solvep1(parsed):
