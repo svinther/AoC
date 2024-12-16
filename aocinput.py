@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from pathlib import Path
 
 from datetime import datetime
@@ -11,6 +13,8 @@ def getinput(year: int = None, day: int = None):
 
     path = Path(f"{day}.txt")
     sessionid = Path(".secret").read_text().strip()
+    if sessionid.startswith("session="):
+        sessionid = sessionid.split("=", 1)
     res = requests.get(
         f"https://adventofcode.com/{year}/day/{day}/input",
         cookies={"session": sessionid},
