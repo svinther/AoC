@@ -32,64 +32,61 @@ def solvep1(parsed):
         v = combo(operand)
         A = floor(A / (2**v))
 
-    instructions.append(adv)
+    instructions.append(adv)  # 0
 
     def bxl(operand):
         nonlocal A, B, C
         v = operand
         B ^= v
 
-    instructions.append(bxl)
+    instructions.append(bxl)  # 1
 
     def bst(operand):
         nonlocal A, B, C
         v = combo(operand)
         B = v % 8
 
-    instructions.append(bst)
+    instructions.append(bst)  # 2
 
     def jnz(operand):
         nonlocal A, B, C
         if A != 0:
             return "JUMP", operand
 
-    instructions.append(jnz)
+    instructions.append(jnz)  # 3
 
     def bxc(operand):
         nonlocal A, B, C
         B ^= C
 
-    instructions.append(bxc)
+    instructions.append(bxc)  # 4
 
     def out(operand):
         nonlocal A, B, C
         v = combo(operand)
         return "OUT", v % 8
 
-    instructions.append(out)
+    instructions.append(out)  # 5
 
     def bdv(operand):
         nonlocal A, B, C
         v = combo(operand)
         B = floor(A / (2**v))
 
-    instructions.append(bdv)
+    instructions.append(bdv)  # 6
 
     def cdv(operand):
         nonlocal A, B, C
         v = combo(operand)
         C = floor(A / (2**v))
 
-    instructions.append(cdv)
+    instructions.append(cdv)  # 7
 
     outputs = []
     i = 0
     n = len(P)
-    # print((A,B,C))
     while i < n:
         result = instructions[P[i]](P[i + 1])
-        # print(i, (A,B,C), instructions[P[i]].__name__, P[i+1], "-->", result)
-
         if result:
             t, v = result
             if t == "OUT":
@@ -102,22 +99,50 @@ def solvep1(parsed):
     return ",".join(outputs)
 
 
+#  2,4
+#  B = A % 8
+#  ,1,2
+#  B = B xor 2
+#  ,7,5
+#  C = floor(A / (2**B))
+#  ,4,7
+#  B = B ^ C
+#  ,1,3
+#  B = B xor 3
+#  ,5,5
+#  out(B%8)
+#  ,0,3
+#  A = floor(A / (2**3))
+#  ,3,0
+# if A != 0: jump 0
+
+
 def solvep2(parsed):
     _, B, C, P = parsed
     GOAL = ",".join(str(p) for p in P)
-    i = 0
 
-    l = 0
-    while True:
-        cur = solvep1((i, B, C, P))
-        print(cur, "--", GOAL)
-        if len(cur) != l:
-            l = len(cur)
-            print(l, len(GOAL))
+    fix = 0
 
-        if cur == GOAL:
-            return i
-        i += 1
+    def bt():
+        nonlocal fix
+
+        for i in range(8):
+            out = solvep1((fix + i, B, C, P))
+            if GOAL == out:
+                return fix + i
+
+            if GOAL.endswith(out):
+                fix += i
+                fix <<= 3
+                t = bt()
+                if t != -1:
+                    return t
+                fix >>= 3
+                fix -= i
+
+        return -1
+
+    return bt()
 
 
 def parse(input_: str):
@@ -147,19 +172,6 @@ Program: 0,1,5,4,3,0
 """
     parsed = parse(input_)
     assert solvep1(parsed) == "4,6,3,5,6,3,5,2,1,0"
-
-
-def testp2():
-    input_ = """
-Register A: 2024
-Register B: 0
-Register C: 0
-
-Program: 0,3,5,4,3,0    
-"""
-
-    parsed = parse(input_)
-    assert solvep2(parsed) == 117440
 
 
 def run():
