@@ -25,7 +25,7 @@ def prune(secret):
 def evolve(secret):
     v = secret * 64
     secret = prune(mix(secret, v))
-    v = floor(secret / 32)
+    v = secret // 32
     secret = prune(mix(secret, v))
     v = secret * 2048
     secret = prune(mix(secret, v))
@@ -48,8 +48,8 @@ def solvep2(parsed):
     sumcombos = defaultdict(int)
 
     for s0 in parsed:
-        combos = defaultdict(int)
-        changes4 = deque()
+        combos = set()
+        c0, c1, c2, c3 = None, None, None, None
 
         sx = evolve(s0)
         lastprice = sx % 10
@@ -57,22 +57,19 @@ def solvep2(parsed):
         for _ in range(4):
             sx = evolve(sx)
             price = sx % 10
-            changes4.append(price - lastprice)
+            c0, c1, c2, c3 = c1, c2, c3, price - lastprice
             lastprice = price
 
         for _ in range(1995):
             sx = evolve(sx)
             price = sx % 10
-            changes4.append(price - lastprice)
+            c0, c1, c2, c3 = c1, c2, c3, price - lastprice
             lastprice = price
 
-            changes4.popleft()
-            pkey = tuple(changes4)
+            pkey = (c0, c1, c2, c3)
             if pkey not in combos:
-                combos[pkey] = price
-
-        for combo, price in combos.items():
-            sumcombos[combo] += price
+                combos.add(pkey)
+                sumcombos[pkey] += price
 
     return max(sumcombos.values())
 
